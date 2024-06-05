@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 USER root
 
@@ -18,4 +18,4 @@ RUN npm install -g flowise
 
 WORKDIR /data
 
-CMD "flowise"
+ENTRYPOINT ["flowise", "start"]
