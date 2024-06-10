@@ -44,3 +44,7 @@
 
 ## compressed
 **/*.tgz
+
+__pycache__/
+*.pyc
+
