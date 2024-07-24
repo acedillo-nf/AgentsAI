@@ -30,7 +30,6 @@ class Chroma_VectorStores implements INode {
         this.category = 'Vector Stores'
         this.description = 'Upsert embedded data and perform similarity search upon query using Chroma, an open-source embedding database'
         this.baseClasses = [this.type, 'VectorStoreRetriever', 'BaseRetriever']
-        this.badge = 'NEW'
         this.credential = {
             label: 'Connect Credential',
             name: 'credential',
@@ -187,6 +186,9 @@ class Chroma_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
+            if (chromaMetadataFilter) {
+                ;(vectorStore as any).filter = obj.filter
+            }
             return vectorStore
         }
         return vectorStore

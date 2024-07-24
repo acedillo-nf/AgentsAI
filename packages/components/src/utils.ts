@@ -24,6 +24,7 @@ export const availableDependencies = [
     '@gomomento/sdk',
     '@gomomento/sdk-core',
     '@google-ai/generativelanguage',
+    '@google/generative-ai',
     '@huggingface/inference',
     '@notionhq/client',
     '@opensearch-project/opensearch',
@@ -47,6 +48,7 @@ export const availableDependencies = [
     'langchain',
     'langfuse',
     'langsmith',
+    'langwatch',
     'linkifyjs',
     'lunary',
     'mammoth',
@@ -206,20 +208,22 @@ export const getNodeModulesPackagePath = (packageName: string): string => {
  */
 export const getInputVariables = (paramValue: string): string[] => {
     if (typeof paramValue !== 'string') return []
-    let returnVal = paramValue
+    const returnVal = paramValue
     const variableStack = []
     const inputVariables = []
     let startIdx = 0
     const endIdx = returnVal.length
-
     while (startIdx < endIdx) {
         const substr = returnVal.substring(startIdx, startIdx + 1)
-
+        // Check for escaped curly brackets
+        if (substr === '\\' && (returnVal[startIdx + 1] === '{' || returnVal[startIdx + 1] === '}')) {
+            startIdx += 2 // Skip the escaped bracket
+            continue
+        }
         // Store the opening double curly bracket
         if (substr === '{') {
             variableStack.push({ substr, startIdx: startIdx + 1 })
         }
-
         // Found the complete variable
         if (substr === '}' && variableStack.length > 0 && variableStack[variableStack.length - 1].substr === '{') {
             const variableStartIdx = variableStack[variableStack.length - 1].startIdx
@@ -307,7 +311,7 @@ function getURLsFromHTML(htmlBody: string, baseURL: string): string[] {
  */
 function normalizeURL(urlString: string): string {
     const urlObj = new URL(urlString)
-    const hostPath = urlObj.hostname + urlObj.pathname
+    const hostPath = urlObj.hostname + urlObj.pathname + urlObj.search
     if (hostPath.length > 0 && hostPath.slice(-1) == '/') {
         // handling trailing slash
         return hostPath.slice(0, -1)
@@ -659,6 +663,8 @@ export const convertSchemaToZod = (schema: string | object): ICommonObject => {
 export const flattenObject = (obj: ICommonObject, parentKey?: string) => {
     let result: any = {}
 
+    if (!obj) return result
+
     Object.keys(obj).forEach((key) => {
         const value = obj[key]
         const _key = parentKey ? parentKey + '.' + key : key
@@ -725,7 +731,7 @@ export const getVars = async (appDataSource: DataSource, databaseEntities: IData
     const variables = ((await appDataSource.getRepository(databaseEntities['Variable']).find()) as IVariable[]) ?? []
 
     // override variables defined in overrideConfig
-    // nodeData.inputs.variables is an Object, check each property and override the variable
+    // nodeData.inputs.vars is an Object, check each property and override the variable
     if (nodeData?.inputs?.vars) {
         for (const propertyName of Object.getOwnPropertyNames(nodeData.inputs.vars)) {
             const foundVar = variables.find((v) => v.name === propertyName)
@@ -769,9 +775,27 @@ export const prepareSandboxVars = (variables: IVariable[]) => {
     return vars
 }
 
-/**
- * Prepare storage path
- */
-export const getStoragePath = (): string => {
-    return process.env.BLOB_STORAGE_PATH ? path.join(process.env.BLOB_STORAGE_PATH) : path.join(getUserHome(), '.flowise', 'storage')
+let version: string
+export const getVersion: () => Promise<{ version: string }> = async () => {
+    if (version != null) return { version }
+
+    const checkPaths = [
+        path.join(__dirname, '..', 'package.json'),
+        path.join(__dirname, '..', '..', 'package.json'),
+        path.join(__dirname, '..', '..', '..', 'package.json'),
+        path.join(__dirname, '..', '..', '..', '..', 'package.json'),
+        path.join(__dirname, '..', '..', '..', '..', '..', 'package.json')
+    ]
+    for (const checkPath of checkPaths) {
+        try {
+            const content = await fs.promises.readFile(checkPath, 'utf8')
+            const parsedContent = JSON.parse(content)
+            version = parsedContent.version
+            return { version }
+        } catch {
+            continue
+        }
+    }
+
+    throw new Error('None of the package.json paths could be parsed')
 }

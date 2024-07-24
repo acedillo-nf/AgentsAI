@@ -1,6 +1,9 @@
+import { IAction } from 'flowise-components'
 import { ICommonObject, IFileUpload, INode, INodeData as INodeDataFromComponent, INodeParams } from 'flowise-components'
 
 export type MessageType = 'apiMessage' | 'userMessage'
+
+export type ChatflowType = 'CHATFLOW' | 'MULTIAGENT'
 
 export enum chatType {
     INTERNAL = 'INTERNAL',
@@ -25,7 +28,9 @@ export interface IChatFlow {
     apikeyid?: string
     analytic?: string
     chatbotConfig?: string
-    apiConfig?: any
+    apiConfig?: string
+    category?: string
+    type?: ChatflowType
 }
 
 export interface IChatMessage {
@@ -36,12 +41,15 @@ export interface IChatMessage {
     sourceDocuments?: string
     usedTools?: string
     fileAnnotations?: string
+    agentReasoning?: string
     fileUploads?: string
     chatType: string
     chatId: string
     memoryType?: string
     sessionId?: string
     createdDate: Date
+    leadEmail?: string
+    action?: string | null
 }
 
 export interface IChatMessageFeedback {
@@ -90,6 +98,16 @@ export interface IVariable {
     value: string
     type: string
     updatedDate: Date
+    createdDate: Date
+}
+
+export interface ILead {
+    id: string
+    name?: string
+    email?: string
+    phone?: string
+    chatflowid: string
+    chatId: string
     createdDate: Date
 }
 
@@ -200,6 +218,9 @@ export interface IncomingInput {
     chatId?: string
     stopNodeId?: string
     uploads?: IFileUpload[]
+    leadEmail?: string
+    history?: IMessage[]
+    action?: IAction
 }
 
 export interface IActiveChatflows {
@@ -241,3 +262,6 @@ export interface IUploadFileSizeAndTypes {
     fileTypes: string[]
     maxUploadSize: number
 }
+
+// DocumentStore related
+export * from './Interface.DocumentStore'

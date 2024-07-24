@@ -21,7 +21,7 @@ import { useTheme } from '@mui/material/styles'
 import { StyledButton } from '@/ui-component/button/StyledButton'
 
 // Icons
-import { IconX, IconCopy } from '@tabler/icons'
+import { IconX, IconCopy } from '@tabler/icons-react'
 
 // API
 import apikeyApi from '@/api/apikey'
@@ -77,7 +77,7 @@ const APIKeyDialog = ({ show, dialogProps, onCancel, onConfirm, setError }) => {
                 onConfirm()
             }
         } catch (error) {
-            setError(error)
+            if (setError) setError(error)
             enqueueSnackbar({
                 message: `Failed to add new API key: ${
                     typeof error.response.data === 'object' ? error.response.data.message : error.response.data
@@ -116,7 +116,7 @@ const APIKeyDialog = ({ show, dialogProps, onCancel, onConfirm, setError }) => {
                 onConfirm()
             }
         } catch (error) {
-            setError(error)
+            if (setError) setError(error)
             enqueueSnackbar({
                 message: `Failed to save API key: ${
                     typeof error.response.data === 'object' ? error.response.data.message : error.response.data

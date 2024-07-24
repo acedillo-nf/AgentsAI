@@ -18,8 +18,16 @@ export const utilGetUploadsConfig = async (chatflowid: string): Promise<any> => 
         throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowid} not found`)
     }
 
-    const uploadAllowedNodes = ['llmChain', 'conversationChain', 'mrklAgentChat', 'conversationalAgent']
-    const uploadProcessingNodes = ['chatOpenAI', 'chatAnthropic', 'awsChatBedrock', 'azureChatOpenAI']
+    const uploadAllowedNodes = [
+        'llmChain',
+        'conversationChain',
+        'reactAgentChat',
+        'conversationalAgent',
+        'toolAgent',
+        'supervisor',
+        'seqStart'
+    ]
+    const uploadProcessingNodes = ['chatOpenAI', 'chatAnthropic', 'awsChatBedrock', 'azureChatOpenAI', 'chatGoogleGenerativeAI']
 
     const flowObj = JSON.parse(chatflow.flowData)
     const imgUploadSizeAndTypes: IUploadFileSizeAndTypes[] = []

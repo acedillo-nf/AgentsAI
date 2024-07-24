@@ -17,7 +17,7 @@ import NodeInfoDialog from '@/ui-component/dialog/NodeInfoDialog'
 
 // const
 import { baseURL } from '@/store/constant'
-import { IconTrash, IconCopy, IconInfoCircle, IconAlertTriangle } from '@tabler/icons'
+import { IconTrash, IconCopy, IconInfoCircle, IconAlertTriangle } from '@tabler/icons-react'
 import { flowContext } from '@/store/context/ReactFlowContext'
 import LlamaindexPNG from '@/assets/images/llamaindex.png'
 
@@ -34,6 +34,7 @@ const CanvasNode = ({ data }) => {
     const [infoDialogProps, setInfoDialogProps] = useState({})
     const [warningMessage, setWarningMessage] = useState('')
     const [open, setOpen] = useState(false)
+    const [isForceCloseNodeInfo, setIsForceCloseNodeInfo] = useState(null)
 
     const handleClose = () => {
         setOpen(false)
@@ -41,6 +42,11 @@ const CanvasNode = ({ data }) => {
 
     const handleOpen = () => {
         setOpen(true)
+    }
+
+    const getNodeInfoOpenStatus = () => {
+        if (isForceCloseNodeInfo) return false
+        else return !canvas.canvasDialogShow && open
     }
 
     const nodeOutdatedMessage = (oldVersion, newVersion) => `Node version ${oldVersion} outdated\nUpdate to latest version ${newVersion}`
@@ -66,7 +72,12 @@ const CanvasNode = ({ data }) => {
             } else if (data.version && componentNode.version > data.version) {
                 setWarningMessage(nodeOutdatedMessage(data.version, componentNode.version))
             } else if (componentNode.badge === 'DEPRECATING') {
-                setWarningMessage('This node will be deprecated in the next release. Change to a new node tagged with NEW')
+                setWarningMessage(
+                    componentNode?.deprecateMessage ??
+                        'This node will be deprecated in the next release. Change to a new node tagged with NEW'
+                )
+            } else {
+                setWarningMessage('')
             }
         }
     }, [canvas.componentNodes, data.name, data.version])
@@ -82,7 +93,7 @@ const CanvasNode = ({ data }) => {
                 border={false}
             >
                 <NodeTooltip
-                    open={!canvas.canvasDialogShow && open}
+                    open={getNodeInfoOpenStatus()}
                     onClose={handleClose}
                     onOpen={handleOpen}
                     disableFocusListener={true}
@@ -208,7 +219,18 @@ const CanvasNode = ({ data }) => {
                         {data.inputParams
                             .filter((inputParam) => !inputParam.hidden)
                             .map((inputParam, index) => (
-                                <NodeInputHandler key={index} inputParam={inputParam} data={data} />
+                                <NodeInputHandler
+                                    key={index}
+                                    inputParam={inputParam}
+                                    data={data}
+                                    onHideNodeInfoDialog={(status) => {
+                                        if (status) {
+                                            setIsForceCloseNodeInfo(true)
+                                        } else {
+                                            setIsForceCloseNodeInfo(null)
+                                        }
+                                    }}
+                                />
                             ))}
                         {data.inputParams.find((param) => param.additionalParams) && (
                             <div
@@ -226,21 +248,24 @@ const CanvasNode = ({ data }) => {
                                 </Button>
                             </div>
                         )}
-                        <Divider />
-                        <Box sx={{ background: theme.palette.asyncSelect.main, p: 1 }}>
-                            <Typography
-                                sx={{
-                                    fontWeight: 500,
-                                    textAlign: 'center'
-                                }}
-                            >
-                                Output
-                            </Typography>
-                        </Box>
-                        <Divider />
-                        {data.outputAnchors.map((outputAnchor, index) => (
-                            <NodeOutputHandler key={index} outputAnchor={outputAnchor} data={data} />
-                        ))}
+                        {data.outputAnchors.length > 0 && <Divider />}
+                        {data.outputAnchors.length > 0 && (
+                            <Box sx={{ background: theme.palette.asyncSelect.main, p: 1 }}>
+                                <Typography
+                                    sx={{
+                                        fontWeight: 500,
+                                        textAlign: 'center'
+                                    }}
+                                >
+                                    Output
+                                </Typography>
+                            </Box>
+                        )}
+                        {data.outputAnchors.length > 0 && <Divider />}
+                        {data.outputAnchors.length > 0 &&
+                            data.outputAnchors.map((outputAnchor) => (
+                                <NodeOutputHandler key={JSON.stringify(data)} outputAnchor={outputAnchor} data={data} />
+                            ))}
                     </Box>
                 </NodeTooltip>
             </NodeCardWrapper>

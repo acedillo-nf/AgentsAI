@@ -24,8 +24,8 @@ export class ChatOpenAI extends LangchainChatOpenAI implements IVisionChatModal 
     }
 
     revertToOriginalModel(): void {
-        super.modelName = this.configuredModel
-        super.maxTokens = this.configuredMaxToken
+        this.modelName = this.configuredModel
+        this.maxTokens = this.configuredMaxToken
     }
 
     setMultiModalOption(multiModalOption: IMultiModalOption): void {
@@ -33,7 +33,9 @@ export class ChatOpenAI extends LangchainChatOpenAI implements IVisionChatModal 
     }
 
     setVisionModel(): void {
-        super.modelName = 'gpt-4-vision-preview'
-        super.maxTokens = this.configuredMaxToken ? this.configuredMaxToken : 1024
+        if (this.modelName !== 'gpt-4-turbo' && !this.modelName.includes('vision')) {
+            this.modelName = 'gpt-4-turbo'
+            this.maxTokens = this.configuredMaxToken ? this.configuredMaxToken : 1024
+        }
     }
 }
